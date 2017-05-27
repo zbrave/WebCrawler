@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.json.simple.parser.ParseException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -15,8 +16,8 @@ import edu.uci.ics.crawler4j.crawler.WebCrawler;
 import edu.uci.ics.crawler4j.parser.HtmlParseData;
 import edu.uci.ics.crawler4j.url.WebURL;
 
-public class LocalDataCollectorCrawler extends WebCrawler {
-    private static final Logger logger = LoggerFactory.getLogger(LocalDataCollectorCrawler.class);
+public class LocalDataCollectorCrawlerTeknosa extends WebCrawler {
+    private static final Logger logger = LoggerFactory.getLogger(LocalDataCollectorCrawlerTeknosa.class);
 
     private static final Pattern FILTERS = Pattern.compile(
         ".*(\\.(css|js|bmp|gif|jpe?g|png|tiff?|mid|mp2|mp3|mp4|wav|avi|mov|mpeg|ram|m4v|pdf" +
@@ -25,7 +26,7 @@ public class LocalDataCollectorCrawler extends WebCrawler {
     CrawlStat myCrawlStat;
     HtmlWriter htmlfile;
 
-    public LocalDataCollectorCrawler() {
+    public LocalDataCollectorCrawlerTeknosa() {
         myCrawlStat = new CrawlStat();
         htmlfile = new HtmlWriter();
         htmlfile.open();
@@ -34,7 +35,7 @@ public class LocalDataCollectorCrawler extends WebCrawler {
     @Override
     public boolean shouldVisit(Page referringPage, WebURL url) {
         String href = url.getURL().toLowerCase();
-        return !FILTERS.matcher(href).matches() && href.startsWith("http://www.teknosa.com/");
+        return !FILTERS.matcher(href).matches() && (href.startsWith("http://www.teknosa.com/urunler/"));
     }
 
     @Override
@@ -50,9 +51,20 @@ public class LocalDataCollectorCrawler extends WebCrawler {
             // Parse data
             String html = parseData.getHtml();
             Document doc = Jsoup.parseBodyFragment(html);
-            Elements info = doc.select("a.product");
-            logger.info("Ürünler seçildi... -> "+info.text());
-            htmlfile.add(info.html());
+//            Elements info = doc.select("a.product");
+            // for vatancomp. add html just products
+            Elements info = doc.select("script[type=application/ld+json]");//<script type="application/ld+json">
+            if (!info.html().isEmpty() && (html.contains("pcat:'Akıllı Telefon'") || html.contains("pcat:'Çift Hatlı'"))){
+            	logger.info("Ürünler seçildi... -> "+info.html());
+            	
+            	System.out.println(page.getWebURL().toString());
+            	try {
+					htmlfile.addForVatan(info.html(), page.getWebURL().toString());
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+            }
             try {
                 myCrawlStat.incTotalTextSize(parseData.getText().getBytes("UTF-8").length);
             } catch (UnsupportedEncodingException ignored) {

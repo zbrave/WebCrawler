@@ -37,7 +37,7 @@ public class LocalDataCollectorController {
         CrawlController controller = new CrawlController(config, pageFetcher, robotstxtServer);
 
         controller.addSeed("http://www.teknosa.com/");
-        controller.start(LocalDataCollectorCrawler.class, numberOfCrawlers);
+        controller.start(LocalDataCollectorCrawlerVatan.class, numberOfCrawlers);
 
         List<Object> crawlersLocalData = controller.getCrawlersLocalData();
         long totalLinks = 0;
