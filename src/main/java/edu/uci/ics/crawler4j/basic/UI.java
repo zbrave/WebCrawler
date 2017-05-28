@@ -125,11 +125,12 @@ public class UI extends JFrame {
 				try {
 					controller = new CrawlController(config, pageFetcher, robotstxtServer);
 					if (chckbxTeknosa.isSelected()){
-						controller.addSeed("http://www.teknosa.com/");
+						controller.addSeed("http://www.istanbulbilisim.com.tr/");
 						controller.start(LocalDataCollectorCrawlerTeknosa.class, numberOfCrawlers);
 					}
 					if (chckbxMediamarkt.isSelected()) {
-						controller.addSeed("http://www.mediamarkt.com.tr/");
+						controller.addSeed("http://www.mediamarkt.com.tr/tr/category/_cep-telefonlar%C4%B1-504171.html");
+						controller.start(LocalDataCollectorCrawlerMediaMarkt.class, numberOfCrawlers);
 					}
 					if (chckbxVatanComp.isSelected()) {
 						controller.addSeed("http://www.vatanbilgisayar.com/");
@@ -146,13 +147,14 @@ public class UI extends JFrame {
 			            totalTextSize += stat.getTotalTextSize();
 			            totalProcessedPages += stat.getTotalProcessedPages();
 			        }
-
+			        DbDAO d = new DbDAO();
+			        d.hits();
 			        logger.info("Aggregated Statistics:");
 			        logger.info("\tProcessed Pages: {}", totalProcessedPages);
 			        logger.info("\tTotal Links found: {}", totalLinks);
 			        logger.info("\tTotal Text Size: {}", totalTextSize);
-			        File htmlFile = new File("output.html");
-			        Desktop.getDesktop().browse(htmlFile.toURI());
+//			        File htmlFile = new File("output.html");
+//			        Desktop.getDesktop().browse(htmlFile.toURI());
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();

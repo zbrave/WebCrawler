@@ -2,14 +2,17 @@ package edu.uci.ics.crawler4j.basic;
 
 import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.json.simple.parser.ParseException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +22,8 @@ import edu.uci.ics.crawler4j.crawler.WebCrawler;
 import edu.uci.ics.crawler4j.parser.HtmlParseData;
 import edu.uci.ics.crawler4j.url.WebURL;
 
-public class LocalDataCollectorCrawlerVatan extends WebCrawler {
-    private static final Logger logger = LoggerFactory.getLogger(LocalDataCollectorCrawlerVatan.class);
+public class LocalDataCollectorCrawlerMediaMarkt extends WebCrawler {
+    private static final Logger logger = LoggerFactory.getLogger(LocalDataCollectorCrawlerMediaMarkt.class);
 
     private static final Pattern FILTERS = Pattern.compile(
         ".*(\\.(css|js|bmp|gif|jpe?g|png|tiff?|mid|mp2|mp3|mp4|wav|avi|mov|mpeg|ram|m4v|pdf" +
@@ -29,7 +32,7 @@ public class LocalDataCollectorCrawlerVatan extends WebCrawler {
     CrawlStat myCrawlStat;
     HtmlWriter htmlfile;
 
-    public LocalDataCollectorCrawlerVatan() {
+    public LocalDataCollectorCrawlerMediaMarkt() {
         myCrawlStat = new CrawlStat();
         htmlfile = new HtmlWriter();
         htmlfile.open();
@@ -38,7 +41,7 @@ public class LocalDataCollectorCrawlerVatan extends WebCrawler {
     @Override
     public boolean shouldVisit(Page referringPage, WebURL url) {
         String href = url.getURL().toLowerCase();
-        return !FILTERS.matcher(href).matches() && (href.startsWith("http://www.vatanbilgisayar.com/"));
+        return !FILTERS.matcher(href).matches() && (href.startsWith("http://www.mediamarkt.com.tr/"));
     }
 
     @Override
@@ -56,16 +59,60 @@ public class LocalDataCollectorCrawlerVatan extends WebCrawler {
             // Parse data
             String html = parseData.getHtml();
             Document doc = Jsoup.parseBodyFragment(html);
-//            Elements info = doc.select("a.product");
-            // for vatancomp. add html just products
-            Elements info = doc.select("script[type=application/ld+json]");//<script type="application/ld+json">
-            if (!info.html().isEmpty() ){
-            	logger.info("Ürünler seçildi... -> "+info.html());
-            	
-            	System.out.println(page.getWebURL().toString());
+            Elements ogTags = doc.select("meta[property^=og:]");
+            Elements prTags = doc.select("meta[property^=product:]");
+            if (ogTags.size() <= 0 || prTags.size() <= 0) {
+                return;
+            }
+
+            // Set OGTags you want
+            String title=null;
+            String type=null;
+            String image=null;
+            String url=null;
+            String price=null;
+            String brand=null;
+            String cur=null;
+            System.out.println("OGler alındı...");
+            for (int i = 0; i < ogTags.size(); i++) {
+                Element tag = ogTags.get(i);
+
+                String text = tag.attr("property");
+                if ("og:image".equals(text)) {
+                    image = tag.attr("content");
+                } else if ("og:type".equals(text)) {
+                    type = tag.attr("content");
+                } else if ("og:title".equals(text)) {
+                    title = tag.attr("content");
+                } else if ("og:url".equals(text)) {
+                    url = tag.attr("content");
+                }
+            }
+            for (int i = 0; i < prTags.size(); i++) {
+                Element tag = prTags.get(i);
+
+                String text = tag.attr("property");
+                if ("product:price:amount".equals(text)) {
+                    price = tag.attr("content");
+                } else if ("product:price:currency".equals(text)) {
+                    cur = tag.attr("content");
+                } else if ("product:brand".equals(text)) {
+                    brand = tag.attr("content");
+                }
+            }
+            System.out.println("ye:"+title+brand+cur+image+price);
+            if (type.equals("og:product")) {
+            	Product p = new Product();
+            	p.setImgUrl(image);
+            	p.setLink(url);
+            	p.setPrice(Float.parseFloat(price));
+            	p.setBrand(brand);
+            	p.setResource("MediaMarkt");
+            	p.setName(title);
+            	DbDAO d = new DbDAO();
             	try {
-            		DbDAO d = new DbDAO();
-            		for (int i=0; i<list.size(); i++) {
+					d.addDB(p);
+					for (int i=0; i<list.size(); i++) {
             			try {
             				System.out.println("adding"+list.get(i).getURL());
 							d.addDBout(page.getWebURL().toString(), list.get(i).getURL());
@@ -75,8 +122,7 @@ public class LocalDataCollectorCrawlerVatan extends WebCrawler {
 							e.printStackTrace();
 						}
             		}
-					htmlfile.addForVatan(info.html(), page.getWebURL().toString());
-				} catch (ParseException e) {
+				} catch (ClassNotFoundException | SQLException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}

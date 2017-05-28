@@ -1,6 +1,9 @@
 package edu.uci.ics.crawler4j.basic;
 
 import java.io.UnsupportedEncodingException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -35,7 +38,7 @@ public class LocalDataCollectorCrawlerTeknosa extends WebCrawler {
     @Override
     public boolean shouldVisit(Page referringPage, WebURL url) {
         String href = url.getURL().toLowerCase();
-        return !FILTERS.matcher(href).matches() && (href.startsWith("http://www.teknosa.com/urunler/"));
+        return !FILTERS.matcher(href).matches() && (href.startsWith("http://www.istanbulbilisim.com.tr/"));
     }
 
     @Override
@@ -46,6 +49,8 @@ public class LocalDataCollectorCrawlerTeknosa extends WebCrawler {
         if (page.getParseData() instanceof HtmlParseData) {
             HtmlParseData parseData = (HtmlParseData) page.getParseData();
             Set<WebURL> links = parseData.getOutgoingUrls();
+            List<WebURL> list = new ArrayList<WebURL>();
+            list.addAll(links);
             logger.info("Outgoings: "+links.size()+" "+parseData.getTitle());
             myCrawlStat.incTotalLinks(links.size());
             // Parse data
@@ -54,12 +59,23 @@ public class LocalDataCollectorCrawlerTeknosa extends WebCrawler {
 //            Elements info = doc.select("a.product");
             // for vatancomp. add html just products
             Elements info = doc.select("script[type=application/ld+json]");//<script type="application/ld+json">
-            if (!info.html().isEmpty() && (html.contains("pcat:'Akıllı Telefon'") || html.contains("pcat:'Çift Hatlı'"))){
+            if (!info.html().isEmpty() ){
             	logger.info("Ürünler seçildi... -> "+info.html());
             	
             	System.out.println(page.getWebURL().toString());
             	try {
-					htmlfile.addForVatan(info.html(), page.getWebURL().toString());
+            		DbDAO d = new DbDAO();
+            		for (int i=0; i<list.size(); i++) {
+            			try {
+            				System.out.println("adding"+list.get(i).getURL());
+							d.addDBout(page.getWebURL().toString(), list.get(i).getURL());
+						} catch (ClassNotFoundException e) {
+							e.printStackTrace();
+						} catch (SQLException e) {
+							e.printStackTrace();
+						}
+            		}
+					htmlfile.addForTeknosa(info.html(), page.getWebURL().toString());
 				} catch (ParseException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
