@@ -59,7 +59,7 @@ public class LocalDataCollectorCrawlerVatan extends WebCrawler {
 //            Elements info = doc.select("a.product");
             // for vatancomp. add html just products
             Elements info = doc.select("script[type=application/ld+json]");//<script type="application/ld+json">
-            if (!info.html().isEmpty() ){
+            if (!info.html().isEmpty() && (html.contains("pcat:'Akıllı Telefon'") || html.contains("pcat:'Çift Hatlı'")) ){
             	logger.info("Ürünler seçildi... -> "+info.html());
             	
             	System.out.println(page.getWebURL().toString());

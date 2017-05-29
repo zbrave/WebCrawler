@@ -101,7 +101,7 @@ public class LocalDataCollectorCrawlerMediaMarkt extends WebCrawler {
                 }
             }
             System.out.println("ye:"+title+brand+cur+image+price);
-            if (type.equals("og:product")) {
+            if (type.equals("og:product") && html.contains("\"name\":\"Cep Telefonları ve Akıllı Telefonlar\"")) {
             	Product p = new Product();
             	p.setImgUrl(image);
             	p.setLink(url);
@@ -114,7 +114,7 @@ public class LocalDataCollectorCrawlerMediaMarkt extends WebCrawler {
 					d.addDB(p);
 					for (int i=0; i<list.size(); i++) {
             			try {
-            				System.out.println("adding"+list.get(i).getURL());
+            				System.out.println("try to add "+list.get(i).getURL());
 							d.addDBout(page.getWebURL().toString(), list.get(i).getURL());
 						} catch (ClassNotFoundException e) {
 							e.printStackTrace();

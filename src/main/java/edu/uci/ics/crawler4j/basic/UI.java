@@ -65,7 +65,7 @@ public class UI extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
-		JCheckBox chckbxTeknosa = new JCheckBox("Teknosa");
+		JCheckBox chckbxTeknosa = new JCheckBox("İstanbul Bilişim");
 		chckbxTeknosa.setBounds(8, 39, 112, 24);
 		contentPane.add(chckbxTeknosa);
 		
